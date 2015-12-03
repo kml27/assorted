@@ -7,7 +7,12 @@ if "python" in sys.argv[0]:
 else:
     file= sys.argv[1]
 
-dir = os.path.basename(file).split(".tar")[0]
+delim = ".tar"
+if "tgz" in file:
+    delim=".tgz"
+
+dir = os.path.basename(file).split(delim)[0]
+
 print("Extracting to " + dir)
 
 mode = "r"
