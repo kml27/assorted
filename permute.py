@@ -51,3 +51,15 @@ while buildingPermutations:
 		buildingPermutations = False
 
 print permutations
+
+minlen = None
+ilow = None
+for j,p in enumerate(permutations):
+    #print p
+    curlen= max(p)-min(p)
+    
+    if minlen is None or curlen < minlen:
+        minlen=curlen
+        ilow = j
+        
+print "cluster:",ilow, "length:",minlen
