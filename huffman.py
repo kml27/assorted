@@ -6,13 +6,21 @@ print "Calculating Huffman for", sys.argv[1]
 doc = open(sys.argv[1])
 #print doc
 
+#create a dictionary to store the frequency counts for each dictionary entry, in this implementation a single char is used,
+#though in many implementations this is extended to multiple bytes, possibly finding the optimal settings from within a range, and/or//
+#adaptively changing keys to maximize compression per block
 wc = {chr(i):0 for i in range(255)}
+#e.g. phrase_count = {chr(i)+chr(j):0 for i in range (255) for j in range(255)}
 
+#read in the original source document to be analyzed for entropy
 source = doc.read()
 total = len(source)
+
+#perform frequency count
 for c in source:
 	wc[c]+=1
 
+#show the source document being analyzed
 print source
 	
 #doc.seek()
@@ -22,25 +30,37 @@ print source
 #for k in wc.keys():
 #	print wc[k]/total	
 	
+    
+#create a relative frequency list for each value that occurred, omitting values that did not occur at all in the source
 values = [[k, v/total] for k,v in wc.iteritems() if v != 0]
+
+#create a new dictionary that will store values of those keys (characters) that occur in the source
 codedict={k:0 for k,v in wc.iteritems() if v!=0}
 
+#output statistic of unique symbols identified
 print len(codedict.keys()), "unique symbols in source"
 
+#deinterleave keys (characters) and probabilities to probabilities normalized (relative frequencies)
 pnorm = zip(*values)[1]
 
+#calculate the minimum number of bits required to represent the amount of entropy identified in the source
 #-dotproduct of p and log2 of p transpose
 entropy = -sum(p * math.log(p, 2.0) for p in pnorm)
 
+#output calculated entropy
 print "Source entropy (bits):", entropy
 
+#order the keys in descending order (greatest frequency to least frequency)
 values.sort(key=lambda x: x[1])
 
+#output calculated probabilities
 for v in values:
 	print "symbol", repr(v[0]), "probability", v[1] 
 
+#verify the sum of the probabilities sums to 1
 totalp = sum(pnorm)
-	
+
+#verbose output to provide notification of any ieee 754 precision rounding introduced error in probabilities 
 print "as expected" if totalp == 1.0 else "warning","Probabilities sum to", "{0:.26f}".format(totalp)
 	
 iteration =0
@@ -116,10 +136,12 @@ maxlength=int(maxlength)
 filename = sys.argv[1]+".hcf"
 codedfile = open(filename, "wb+")
 #write length of keys when stored in file
+#this file format allows for 1 byte to store the maximum length of a key, by def. the most frequently used values will have the shortest keys
 print "warning, max length of key exceeds 255, byte expected for maxlength" if maxlength>255 else "code dictionary entries size:", maxlength, "bytes"
 codedfile.write(chr(int(maxlength)))
 #write number of keys (dictionary entries)
 number_keys = len(codedict.keys())
+#this file format allows for 1 byte to store the number of keys, it could be modified to store more
 print "number of keys exceeds 255, byte expected for number of keys" if number_keys>255 else number_keys, "keys"
 codedfile.write(chr(number_keys))
 
@@ -140,9 +162,19 @@ for k,v in codedict.iteritems():
 	print padv, "written in dictionary", paddedkey
 	
 	codedfile.write(paddedkey)
-		
+
+unicode_bit_length = int(round(math.log(sys.maxunicode, 2.0)))
+print "this version of python was compiled to use", unicode_bit_length, "bits to represent unichr"
+    
+codedfile.write(chr(int(unicode_bit_length/8)))
+    
 #write len in bits of coded source, try to give the biggest value supported (UCS2 or UCS4)
-codedfile.write(str(cslen).encode("UTF-8"))
+coded_bit_length = unichr(int(str(cslen).encode("UTF-8")));
+
+if len(coded_bit_length)<unicode_bit_length:
+    codedfile.write(chr(0))
+
+codedfile.write(coded_bit_length)
 
 print codedsource
 
@@ -164,6 +196,6 @@ for i in range(bytelength):
 #close file
 codedfile.close()
 
-print "written file is", os.stat(filename).st_size
+print "written file is", os.stat(filename).st_size, "bytes"
 
 #print codedsource

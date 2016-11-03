@@ -15,9 +15,12 @@ buf = f.read()
 count=0
 
 for c in buf:
-	i = ord(c)
-	sys.stdout.write(c+" "+format(i, "#02x")+"\t")
-	count+=1
-	if count ==5:
-		count =0
-		sys.stdout.write("\n")
+    i = ord(c)
+    proxy = c
+    if c=='\t':
+        proxy = ' '
+    sys.stdout.write(proxy+" "+format(i, "#02x")+"\t")
+    count+=1
+    if count ==5:
+        count =0
+        sys.stdout.write("\n")
