@@ -45,20 +45,29 @@ decoded_stream = ""
 
 remaining_bits = coded_length
 
+bitstream =""
+
 for c in codeddata:
     
     bits = remaining_bits if remaining_bits < 8 else 8
     bitstream_format = "{0:0"+ str(bits) +"b}"
     #print bitstream_format
-    bitstream = bitstream_format.format(ord(c))[:bits]
-    print bitstream
-    while len(bitstream)>0:
+    
+    bit_block = bitstream_format.format(ord(c))[:bits]
+    bitstream += bit_block
+    #print "current buffer\t", bitstream
+    print bit_block
+    
+    decoded_bits = True
+    while len(bitstream)>0 and decoded_bits:
+        decoded_bits = False
         for k,v in min_dict.iteritems():
             #print bitstream[:v[0]], v[1], k
             if bitstream[:v[0]]==v[1]:
                 decoded_stream+=k
                 #print k
                 bitstream = bitstream[v[0]:]
+                decoded_bits = True
     
     remaining_bits -=8
     
